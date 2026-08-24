@@ -61,7 +61,19 @@ bun ~/.omp/agent/extensions/settings-i18n/patch.ts
 bun ~/.omp/agent/extensions/settings-i18n/diff-translations.ts --update
 ```
 
-### 5. 完成
+### 5. 推送到同步仓库
+
+> 仅当步骤 2 修改了翻译，或步骤 4 刷新了快照时执行；纯打补丁无文件变更则跳过。
+
+```bash
+cp -r ~/.omp/agent/extensions/settings-i18n/. /d/Data/GitHub/omp-i18n/settings-i18n/
+cp ~/.omp/agent/commands/i18n-update.md /d/Data/GitHub/omp-i18n/commands/
+cd /d/Data/GitHub/omp-i18n && git add . && git commit -m "omp <版本>: <变更摘要，如 新增24设置+4命令，修3变化>" && git push
+```
+
+网络不通时跳过并在完成报告中说明（下次执行会一并带上，collect 是整目录覆盖无丢失风险）。
+
+### 6. 完成
 
 - 告知用户重启 omp 以看到翻译效果
 - 如果步骤 2 中有翻译变更，提示用户重启后检查对应设置页面
