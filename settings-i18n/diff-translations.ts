@@ -293,16 +293,13 @@ async function main() {
 	console.log(`  命令:   ${Object.keys(COMMAND_ZH).length} 已译 / ${Object.keys(cur.commands).length} 总计`);
 	console.log(`\n  ${green(`✨ ${totalNew} 新增`)}  ${red(`🗑️ ${totalRemoved} 废除`)}  ${yellow(`📝 ${totalChanged} 变化`)}`);
 
-	// ── 提示（翻译门槛：新增攒批，变化必修）──
-	if (totalNew > 0 && totalNew < 15) {
-		console.log(`\n${cyan("⏸")} 翻译增量 ${totalNew} 条 < 15 门槛：跳过翻译直接打补丁（少量英文不影响使用）`);
-		console.log(`  ${dim("新增项不依赖快照检测，下次 diff 会继续报告，攒够门槛再批量翻译")}`);
-	} else if (totalNew >= 15) {
-		console.log(`\n${cyan("💡")} 翻译增量 ${totalNew} 条 ≥ 15 门槛：编辑 ${bold("index.ts")} 批量翻译，然后运行 ${bold("bun patch.ts")} 应用`);
-	}
-	if (totalChanged > 0) {
-		console.log(`${yellow("⚠")} 文本变化 ${totalChanged} 条不受门槛限制（已有翻译失效属退化）：需随本轮修复`);
-		if (!shouldUpdate) console.log(`${cyan("💡")} 修复后运行 ${bold("bun diff-translations.ts --update")} 刷新快照`);
+	// ── 提示（翻译门槛：✨新增+📝变化合并攒批，>15 触发新一轮）──
+	const pending = totalNew + totalChanged;
+	if (pending > 15) {
+		console.log(`\n${cyan("💡")} 新增+变化 ${pending} 条（✨${totalNew} + 📝${totalChanged}）超过 15 门槛：编辑 ${bold("index.ts")} 批量翻译，然后 patch + 快照刷新 + 推送`);
+	} else {
+		console.log(`\n${cyan("⏸")} 新增+变化 ${pending} 条（✨${totalNew} + 📝${totalChanged}）未过 15 门槛：本轮仅打补丁（保住已有中文），跳过翻译/快照刷新/推送`);
+		console.log(`  ${dim("不刷新快照则新增与变化下次继续报告，攒够门槛一并处理（文本变化仅在快照刷新后才从报告中消失）")}`);
 	}
 
 	// ── 更新快照 ──

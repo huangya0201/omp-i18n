@@ -73,11 +73,11 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 	},
 	"providers.openai-codex.codeMode": {
 		label: "Codex 代码模式",
-		description: "将 Codex code_mode_only 模型（GPT-5.6）经由 eval 工具路由，作为程序化执行入口：直接工具面收缩为 eval/ask/todo，其余会话工具都从 eval 单元中调用。与 codex-rs 的 Code Mode 对齐。'auto' 跟随模型目录标记",
+		description: "将 Codex code_mode_only 模型（GPT-5.6）经由 eval 路由。直接工具为 eval/ask/todo/yield/think/checkpoint/rewind，其余会话工具从 eval 单元中调用。与 codex-rs 的 Code Mode 对齐。'auto' 跟随模型目录标记",
 	},
 	"providers.openai-codex.codeModeDirectTools": {
 		label: "Codex 代码模式直接工具",
-		description: "Codex 代码模式启用时，除 eval/ask/todo 外仍保持可直接调用的额外工具名",
+		description: "Codex 代码模式的额外直接工具。标准直接工具为 eval/ask/todo/yield/think/checkpoint/rewind",
 	},
 	"providers.cacheRetention": {
 		label: "提示词缓存保留",
@@ -251,9 +251,13 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 		label: "显示 Token 用量",
 		description: "在助手消息上显示每轮的 Token 用量",
 	},
+	"display.showTurnTime": {
+		label: "显示轮次耗时",
+		description: "在助手消息用量行上显示从提示到输出的总耗时（含工具调用）",
+	},
 	"display.cacheMissMarker": {
 		label: "缓存未命中标记",
-		description: "在请求丢失（未命中）提示词缓存的助手轮次上方显示分隔线",
+		description: "在请求丢失（未命中）提示词缓存的助手轮次之后显示分隔线",
 	},
 	"display.collapseCompacted": {
 		label: "折叠压缩历史",
@@ -397,7 +401,7 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 	},
 	"retry.maxDelayMs": {
 		label: "最大重试延迟",
-		description: "重试之间的最大等待时间（毫秒）。当提供商要求我们等待比这更长的时间且没有凭据或模型回退成功时，请求会快速失败而不是休眠（例如 3 小时的 Anthropic 速率限制窗口）",
+		description: "重试之间的最大等待时间（毫秒）。当提供商要求我们等待比这更长的时间且没有凭据或模型回退成功时，请求会快速失败而不是休眠（例如 3 小时的 Anthropic 速率限制窗口）。设为 0 解除上限——让会话按服务商声明的配额重置时间自动恢复",
 	},
 	"retry.modelFallback": {
 		label: "重试模型回退",
@@ -445,7 +449,7 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 	},
 	"doubleEscapeAction": {
 		label: "双击 Esc 操作",
-		description: "编辑器为空时连按两次 Esc 执行的操作",
+		description: "编辑器为空时连按两次 Esc 打开记录回退选择器",
 	},
 	"treeFilterMode": {
 		label: "会话树过滤器",
@@ -649,7 +653,11 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 	},
 	"memory.backend": {
 		label: "记忆后端",
-		description: "关闭、本地记忆管线或 Hindsight 远程记忆",
+		description: "关闭、本地摘要管线、Mnemopi SQLite、Hindsight 远程记忆或 Sharpshooter",
+	},
+	"sharpshooter.model": {
+		label: "Sharpshooter 模型",
+		description: "抽取/整合所用模型选择器，留空 = smol 角色",
 	},
 	"autolearn.enabled": {
 		label: "自动学习（实验性）",
@@ -822,6 +830,10 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 	"edit.autoRepair.enabled": {
 		label: "自动修复解析回归",
 		description: "编辑破坏文件 AST 解析时，让 smol 模型修复受损区域（重新解析校验；失败则退为警告）",
+	},
+	"edit.recoverInlineEdits": {
+		label: "恢复内联编辑载荷",
+		description: "把模型以纯文本形式输出的编辑载荷转换为 edit 工具调用并执行",
 	},
 	"readLineNumbers": {
 		label: "行号显示",
@@ -1145,7 +1157,7 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 	},
 	"tools.xdev": {
 		label: "xd:// 工具",
-		description: "将很少使用的（可发现的）工具挂载到 xd:// 设备 URL 下，通过 read/write 驱动，而非在每次请求都附带其 schema。没有授予写入工具的会话跳过挂载并以顶层方式暴露所有工具。关闭则以顶层方式暴露每个已启用的工具",
+		description: "将很少使用的（可发现的）工具挂载到 xd:// 设备 URL 下，通过 read/write 驱动，而非在每次请求都附带其 schema。显式工具列表授予了 read 但未授予 write 的会话，经由仅限设备的写入通道挂载设备（文件系统写入仍被拒绝）。关闭则以顶层方式暴露每个已启用的工具",
 	},
 	"tools.xdevDocs": {
 		label: "xd:// 提示文档",
@@ -1333,7 +1345,7 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 	},
 	"providers.tts": {
 		label: "文本转语音提供商",
-		description: "tts 工具后端：本地神经 TTS (Kokoro-82M) 或 xAI Grok Voice",
+		description: "tts 工具后端：本地设备上神经 TTS (Kokoro-82M)、xAI Grok Voice 或 DeepInfra 语音",
 	},
 	"tts.localModel": {
 		label: "本地 TTS 模型",
@@ -1670,6 +1682,7 @@ export const OPTION_ZH: Record<string, Record<string, { label?: string; descript
 		"local": { label: "本地", description: "本地会话摘要管线（memory_summary.md）" },
 		"hindsight": { label: "Hindsight", description: "Vectorize Hindsight 远程记忆服务" },
 		"mnemopi": { label: "Mnemopi", description: "本地 SQLite 召回/保留后端，支持可选嵌入" },
+		"sharpshooter": { label: "Sharpshooter", description: "低摩擦门控的项目决策文件（架构/产品/风格），后台整合" },
 	},
 	"mnemopi.scoping": {
 		"global": { label: "全局", description: "每个项目共享一个 Mnemopi 银行" },
@@ -1847,6 +1860,7 @@ export const OPTION_ZH: Record<string, Record<string, { label?: string; descript
 		"xai": { label: "xAI Grok Imagine", description: "需要 xAI Grok OAuth 或 XAI_API_KEY" },
 		"gemini": { label: "Gemini", description: "需要 GEMINI_API_KEY" },
 		"openrouter": { label: "OpenRouter", description: "需要 OPENROUTER_API_KEY" },
+		"deepinfra": { label: "DeepInfra", description: "需要 DEEPINFRA_API_KEY" },
 	},
 	"providers.fireworksTier": {
 		"standard": { label: "Standard", description: "默认分发路径（无 service_tier）" },
@@ -1856,6 +1870,7 @@ export const OPTION_ZH: Record<string, Record<string, { label?: string; descript
 		"auto": { label: "自动", description: "优先本地设备上 TTS；当凭据存在时将 .mp3 输出路由到 xAI" },
 		"local": { label: "本地", description: "设备上神经 TTS (Kokoro-82M)；输出是 WAV/PCM16" },
 		"xai": { label: "xAI Grok Voice", description: "需要 xAI Grok OAuth 或 XAI_API_KEY；MP3 或 WAV" },
+		"deepinfra": { label: "DeepInfra Speech", description: "需要 DEEPINFRA_API_KEY；MP3 或 WAV" },
 	},
 	"tts.localModel": {
 		"kokoro": { label: "Kokoro-82M", description: "Kokoro-82M 神经 TTS — SoTA 设备上质量，多语音，完全本地" },
@@ -2088,6 +2103,10 @@ export const COMMAND_ZH: Record<string, string> = {
 	git: "打开 Git 界面（分屏 diff 查看器、暂存、提交编写器）",
 	pin: "置顶/取消置顶会话（固定在恢复列表顶部）",
 	cleanse: "用加权并行子 Agent 检测并修复项目诊断",
+	// ── 18.1 命令 ──
+	trace: "在统计面板中打开本会话的 trace",
+	hub: "打开实时 Agent Hub",
+	restart: "以相同启动参数重启 omp 并恢复本会话",
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2155,6 +2174,8 @@ export const SUBCOMMAND_ZH: Record<string, Record<string, string>> = {
 		view: "显示当前注入的记忆内容",
 		stats: "显示记忆后端统计",
 		diagnose: "运行记忆后端诊断",
+		queue: "显示等待整合的待处理记忆增量",
+		sync: "立即运行记忆整合",
 		clear: "清除已持久化的记忆数据和产物",
 		reset: "clear 的别名",
 		enqueue: "排队记忆整合维护任务",
@@ -2283,7 +2304,7 @@ export const STRING_ZH: Record<string, string> = {
 	"No plugins available": "没有可用插件",
 	"nothing to image": "没有可成像的内容",
 	"Plugin Options:": "插件选项:",
-	"Preview tool renderers across streaming, in-progress, success, and failure states": "预览工具渲染器在流式、进行中、成功与失败状态下的效果",
+	"Preview tool, composer, and status-line renderers in a deterministic visual gallery": "在确定性可视化画廊中预览工具、编写器与状态栏渲染器",
 	"Print a shell completion script (bash, zsh, or fish)": "输出 shell 补全脚本（bash、zsh 或 fish）",
 	"Rewrite a text file into the dense prompt register, reporting what it drops": "将文本文件重写为密集提示词寄存器，并报告丢弃的内容",
 	"Run an auth-gateway forward proxy backed by the configured broker": "运行由已配置 broker 支撑的 auth-gateway 正向代理",
