@@ -1,6 +1,6 @@
 # omp-i18n
 
-OMP (oh-my-pi) 中文翻译补丁的私有仓库，跨 Windows 机器同步。
+OMP (oh-my-pi) 中文翻译补丁的私有仓库，跨 Windows 同步。自用
 
 ## 内容
 
