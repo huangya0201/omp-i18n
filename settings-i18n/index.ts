@@ -45,7 +45,7 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 	},
 	"power.sleepPrevention": {
 		label: "防止休眠",
-		description: "在活动会话期间防止 macOS 休眠。每个级别是累积的 — 叠加所有更低级别的标志",
+		description: "在活动会话期间防止系统休眠。每个级别是累积的 — 叠加所有更低级别的标志",
 	},
 	"advisor.enabled": {
 		label: "启用顾问",
@@ -171,6 +171,10 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 		label: "为文本模型描述图像",
 		description: "当图像附加到不支持视觉的模型时，将其保存到 local:// 并注入来自支持视觉的模型的描述，而不是丢弃它",
 	},
+	"images.questionTimeoutMs": {
+		label: "图片提问超时",
+		description: "read 的 ?q= 图片提问背后视觉模型调用的每次请求超时（毫秒）。停滞的服务商会快速以超时错误失败，而非阻塞到手动中止。设为 0 禁用超时",
+	},
 	"images.urls.enabled": {
 		label: "图片以 URL 提供",
 		description: "通过配置的后端链发布外发图片，向会抓取 URL 的服务商发送短链接而非内联 base64；全部后端或抓取失败时自动回退内联",
@@ -270,6 +274,10 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 	"tui.imeSafeCursor": {
 		label: "输入法安全布局",
 		description: "将提示的底框移到单独一行，使 macOS 输入法的预编辑文本无法将其挤位",
+	},
+	"tui.reactions": {
+		label: "Agent 表情回应",
+		description: "邀请 Agent 在其消息气泡上以 emoji 徽章回应你的消息",
 	},
 	"spelling.typoDetection": {
 		label: "拼写检查 (macOS)",
@@ -449,7 +457,7 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 	},
 	"doubleEscapeAction": {
 		label: "双击 Esc 操作",
-		description: "编辑器为空时连按两次 Esc 打开记录回退选择器",
+		description: "编辑器为空时连按两次 Esc 的行为：打开记录回退选择器、打开会话树，或无操作",
 	},
 	"treeFilterMode": {
 		label: "会话树过滤器",
@@ -947,13 +955,13 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 		label: "Eval: JavaScript 后端",
 		description: "允许 eval 工具调度到进程内 JavaScript 运行时",
 	},
-	"eval.rb": {
-		label: "Eval: Ruby 后端",
-		description: "允许 eval 工具调度到持久 Ruby 内核",
+	"eval.tools.enabled": {
+		label: "Eval 定义的工具",
+		description: "允许 eval 单元定义工具（Python 的 @tool、JS 的 tool(fn)），供 task、agent() 和 workpool() 子 Agent 调用",
 	},
-	"eval.jl": {
-		label: "Eval: Julia 后端",
-		description: "允许 eval 工具调度到持久 Julia 内核",
+	"eval.workpool.freshAgents": {
+		label: "工作池全新 Agent",
+		description: "为每个 workpool 条目生成全新子 Agent，而非复用工作进程或批量处理排队条目",
 	},
 	"eval.autoBackground.enabled": {
 		label: "Eval 自动后台化",
@@ -966,14 +974,6 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 	"python.interpreter": {
 		label: "Python 解释器",
 		description: "精确 Python 可执行文件的可选路径。设置后，将跳过自动 Python 运行时发现",
-	},
-	"ruby.interpreter": {
-		label: "Ruby 解释器",
-		description: "指向确切 Ruby 可执行文件的可选路径。设置后，将跳过自动 Ruby 运行时发现",
-	},
-	"julia.interpreter": {
-		label: "Julia 解释器",
-		description: "指向确切 Julia 可执行文件的可选路径。设置后，将跳过自动 Julia 运行时发现",
 	},
 	"tools.approval": {
 		label: "工具批准策略",
@@ -1039,13 +1039,9 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 		label: "生成图片",
 		description: "启用 generate_image 工具（文本生成图片及编辑）。当 tools.xdev 开启时作为 xd:// 设备暴露。支持 `resolution` `mode` `background` 参数。根据 providers.image 选择服务商（black-forest-labs/flux 为默认；OpenAI DALL·E 也受支持）",
 	},
-	"inspect_image.mode": {
-		label: "图片理解",
-		description: "控制 inspect_image 工具，该工具将图像理解委托给支持视觉的模型。'auto' 仅在活动模型缺少原生图像输入时暴露；'on' 始终暴露；'off' 从不暴露",
-	},
 	"computer.enabled": {
 		label: "Computer",
-		description: "启用可编程的主机桌面控制工具（截图、输入、无障碍功能）",
+		description: "启用可编程的主机桌面 eval 预置（截图、输入、无障碍功能）",
 	},
 	"computer.display": {
 		label: "Computer 显示器",
@@ -1058,10 +1054,6 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 	"computer.maxHeight": {
 		label: "Computer 截图高度",
 		description: "合成截图的最大高度（像素；默认 1080）",
-	},
-	"inspect_image.timeoutMs": {
-		label: "图片理解超时",
-		description: "inspect_image 视觉模型调用的每次请求超时（毫秒）。停滞的服务商会快速以超时错误失败，而非阻塞到手动中止。设为 0 禁用超时",
 	},
 	"checkpoint.enabled": {
 		label: "检查点/回退",
@@ -1105,7 +1097,7 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 	},
 	"browser.enabled": {
 		label: "浏览器",
-		description: "启用 browser 工具（Ulixee Hero）",
+		description: "启用浏览器 eval 预置，用于脚本化 Chromium 自动化（Puppeteer）",
 	},
 	"browser.cdpUrl": {
 		label: "浏览器 CDP URL",
@@ -1113,7 +1105,7 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 	},
 	"browser.relay": {
 		label: "浏览器中继",
-		description: "通过 omp 浏览器中继驱动你自己的 Chrome 标签页。安装一次扩展（`omp browser-relay install`）；浏览器工具需要时中继服务器自动启动。优先于浏览器 CDP URL；设置 PI_BROWSER_RELAY=0 或 PI_BROWSER_RELAY=1 以覆盖",
+		description: "通过 omp 浏览器中继驱动你自己的 Chrome 标签页。安装一次扩展（`omp browser-relay install`）；浏览器 prelude 需要时中继服务器自动启动。优先于浏览器 CDP URL；设置 PI_BROWSER_RELAY=0 或 PI_BROWSER_RELAY=1 以覆盖",
 	},
 	"browser.relayUrl": {
 		label: "浏览器中继 URL",
@@ -1207,9 +1199,13 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 		label: "重新规划时刷新标题",
 		description: "除非标题由用户设置，否则在 todo init 重新规划后刷新生成的会话标题",
 	},
-	"task.isolation.mode": {
-		label: "隔离模式",
-		description: "子 Agent 的隔离方式。auto 让 PAL 自动选择最佳后端（APFS/btrfs/ZFS 写时复制、Overlayfs/ProjFS 叠加等）",
+	"task.isolation.enabled": {
+		label: "隔离子 Agent",
+		description: "在检出的隔离副本中运行子 Agent，事后合并其变更",
+	},
+	"isolation.backend": {
+		label: "隔离后端",
+		description: "子 Agent 隔离与工作树克隆使用的后端",
 	},
 	"task.isolation.apply": {
 		label: "应用隔离变更",
@@ -1226,6 +1222,14 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 	"worktree.base": {
 		label: "工作树基础目录",
 		description: "代理管理工作树的基础目录 — 任务隔离副本、`github` PR 检出和 `omp worktree` 清理都在此目录。未设置时使用 ~/.omp/wt。必须是绝对路径或 ~ 相对路径；相对路径将被忽略。OMP_WORKTREE_DIR 环境变量可覆盖此项",
+	},
+	"worktree.clone": {
+		label: "以克隆创建工作树",
+		description: "`github pr_checkout` 与 bash 中 `git worktree add` 创建的新工作树以当前检出的写时复制克隆起步，被忽略的构建产物（node_modules、target）随之携带；文件系统无法克隆时回退为普通检出",
+	},
+	"worktree.cleanSource": {
+		label: "/wt 时清理源检出",
+		description: "用 `/wt` 创建工作树时，变更携带完毕后重置原检出的已跟踪变更并移除未跟踪文件",
 	},
 	"task.eager": {
 		label: "优先委派任务",
@@ -1282,6 +1286,10 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 	"task.showResolvedModelBadge": {
 		label: "显示已解析模型徽章",
 		description: "在任务小部件状态行中显示每个子代理使用的实际模型 ID",
+	},
+	"skillful": {
+		label: "在提示词中列出技能",
+		description: "在系统提示词中列出可用技能；关闭可节省上下文，并可用 /skillful 按会话切换",
 	},
 	"skills.enableSkillCommands": {
 		label: "技能命令",
@@ -1377,11 +1385,11 @@ export const SETTINGS_ZH: Record<string, { label: string; description: string }>
 	},
 	"providers.tinyModelDevice": {
 		label: "微型模型设备",
-		description: "本地微型模型的 ONNX 执行提供商。默认仅 CPU 推理",
+		description: "本地微型模型（标题 + 记忆）的推理后端：ONNX 执行提供商，或 `mlx` 下载 MLX 权重并在 Apple 芯片上经 mlx-lm 运行。默认仅 CPU ONNX。PI_TINY_DEVICE 环境变量可覆盖此项",
 	},
 	"providers.tinyModelDtype": {
 		label: "微型模型精度",
-		description: "本地微型模型的 ONNX 量化精度。默认使用模型自带 dtype (q4)",
+		description: "本地微型模型的 ONNX 量化精度。默认使用模型自带 dtype (q4)；精度越低越快、越高越忠实。MLX 后端忽略此项（其仓库预量化为 4 位）。PI_TINY_DTYPE 环境变量可覆盖此项",
 	},
 	"providers.memoryModel": {
 		label: "记忆模型",
@@ -1723,14 +1731,6 @@ export const OPTION_ZH: Record<string, Record<string, { label?: string; descript
 		"preferred": { label: "首选", description: "在第一条消息上建议待办事项列表（提醒，不强制）" },
 		"always": { label: "总是", description: "在第一条消息上强制综合待办事项列表" },
 	},
-	"inspect_image.mode": {
-		"auto": { label: "自动（仅无视觉模型）" },
-		"on": { label: "开启" },
-		"off": { label: "关闭" },
-	},
-	"inspect_image.timeoutMs": {
-		"0": { label: "已禁用" },
-	},
 	"tools.maxTimeout": {
 		"0": { label: "无限制" },
 	},
@@ -1745,8 +1745,7 @@ export const OPTION_ZH: Record<string, Record<string, { label?: string; descript
 		"builtins": { label: "仅内置", description: "内联内置文档；MCP 和扩展文档按需获取。" },
 		"catalog": { label: "仅目录", description: "列出所有设备；全部文档按需获取。" },
 	},
-	"task.isolation.mode": {
-		"none": { label: "无", description: "不隔离" },
+	"isolation.backend": {
 		"auto": { label: "自动", description: "让 PAL 选择最佳可用后端" },
 		"apfs": { label: "APFS", description: "macOS clonefile 写时复制 (APFS)" },
 		"btrfs": { label: "btrfs", description: "btrfs 子卷快照" },
@@ -1909,18 +1908,17 @@ export const OPTION_ZH: Record<string, Record<string, { label?: string; descript
 		"bm_fable": { label: "Fable (英式男声)" },
 	},
 	"providers.tinyModel": {
-		"online": { label: "在线 (pi/smol)", description: "当前在线标题生成路径；没有本地模型下载或设备上推理" },
-		"lfm2-350m": { label: "LFM2 350M", description: "推荐的本地模型；最佳速度/质量平衡，约 212 MB 缓存" },
-		"qwen3-0.6b": { label: "Qwen3 0.6B", description: "最稳健的本地选项；首次加载较慢，约 500 MB 缓存" },
-		"gemma-270m": { label: "Gemma 270M", description: "最小可行的本地选项；较低质量，最低缓存占用" },
-		"qwen2.5-0.5b": { label: "Qwen2.5 0.5B", description: "平衡的本地回退；中等质量和缓存占用" },
-		"lfm2-700m": { label: "LFM2 700M", description: "最高质量的本地选项；比 LFM2 350M 更大更慢" },
+		"online": { label: "在线 (TINY 角色)", description: "在线标题生成：指定时用 TINY 模型角色（在 /models 设置），否则在线回退（commit 角色，然后 @smol）。无本地下载或设备上推理" },
+		"lfm2.5-230m": { label: "LFM2.5 230M", description: "推荐的本地模型；最快的 LFM2.5 选项，约 214 MB 缓存" },
+		"lfm2.5-350m": { label: "LFM2.5 350M", description: "更大的 LFM2.5 选项，约 292 MB 缓存；标题偏简洁" },
+		"falcon-h1-90m": { label: "Falcon H1 Tiny 90M", description: "最小选项，约 147 MB 缓存；复杂提示上保真度较低" },
 	},
 	"providers.tinyModelDevice": {
 		"default": { label: "默认", description: "仅 CPU 推理" },
 		"gpu": { label: "GPU", description: "加速提供商（WebGPU/Metal、CUDA 或 DirectML）" },
 		"cpu": { label: "CPU", description: "仅 CPU 推理" },
-		"metal": { label: "Metal", description: "Apple GPU 的 WebGPU 别名" },
+		"mlx": { label: "MLX", description: "Apple 芯片 GPU，经 mlx-lm（Python 子进程；macOS arm64）" },
+		"metal": { label: "Metal", description: "MLX 的别名" },
 		"webgpu": { label: "WebGPU", description: "WebGPU/Metal 后端" },
 		"cuda": { label: "CUDA", description: "NVIDIA CUDA (Linux x64)" },
 		"dml": { label: "DirectML", description: "DirectML 后端 (Windows)" },
@@ -2002,11 +2000,12 @@ export const OPTION_ZH: Record<string, Record<string, { label?: string; descript
 		"exacto": { label: ":exacto", description: "挑选的高质量提供商（仅针对选定的模型定义）" },
 	},
 	"providers.fetch": {
-		"auto": { label: "自动", description: "优先级：原生 > trafilatura > lynx > parallel > jina" },
+		"auto": { label: "自动", description: "优先级：原生 > trafilatura > lynx > parallel > firecrawl > jina" },
 		"native": { label: "原生", description: "进程内 HTML→Markdown 转换器（始终可用）" },
 		"trafilatura": { label: "Trafilatura", description: "通过 uv/pip 自动安装" },
 		"lynx": { label: "Lynx", description: "需要 lynx 系统包" },
 		"parallel": { label: "Parallel", description: "需要 PARALLEL_API_KEY" },
+		"firecrawl": { label: "Firecrawl", description: "需要 FIRECRAWL_API_KEY" },
 		"jina": { label: "Jina", description: "使用 r.jina.ai 阅读器（JINA_API_KEY 可选）" },
 	},
 	"codexResets.autoRedeem": {
@@ -2037,7 +2036,7 @@ export const COMMAND_ZH: Record<string, string> = {
 	export: "导出会话为 HTML 文件",
 	dump: "复制会话记录到剪贴板（并将 LLM 请求 JSON 写入临时文件）",
 	share: "通过加密链接分享会话（共享服务器或私密 gist）",
-	browser: "切换浏览器无头/可见模式",
+	browser: "切换浏览器 eval 预置的无头/可见模式",
 	copy: "复制最后一条 Agent 消息到剪贴板",
 	todo: "查看或修改 Agent 的任务列表",
 	queue: "为代理让出后排队一条消息",
@@ -2050,7 +2049,7 @@ export const COMMAND_ZH: Record<string, string> = {
 	context: "显示上下文用量估算",
 	extensions: "打开扩展控制中心",
 	agents: "打开 Agent 控制中心",
-	branch: "从历史消息创建新分支",
+	branch: "回退到历史消息，旧路径保留为分支",
 	fork: "从历史消息创建新分叉",
 	tree: "浏览会话树（切换分支）",
 	login: "使用 OAuth 登录",
@@ -2077,8 +2076,7 @@ export const COMMAND_ZH: Record<string, string> = {
 	"reload-plugins": "重新加载所有插件（技能、命令、钩子、工具、Agent、MCP）",
 	force: "强制下一轮使用指定工具",
 	quit: "退出应用",
-	computer: "为本会话切换原生 computer-use 工具",
-	vision: "控制本会话的 inspect_image 视觉委托工具",
+	computer: "为本会话切换原生 computer-use eval 预置",
 	live: "启动 Codex 支持的实时语音模式",
 	pause: "冻结所有代理（主代理、子代理、顾问）直到恢复",
 	// ── 16.0.6 命令（setup/goal/advisor/collab 等）──
@@ -2086,7 +2084,7 @@ export const COMMAND_ZH: Record<string, string> = {
 	"plan-review": "重新打开最新计划的评审（仅计划模式）",
 	goal: "切换目标模式（本会话的持久自主目标）",
 	"guided-goal": "让代理在聊天中访谈你，然后设置目标模式",
-	switch: "切换本会话模型（同 alt+p）",
+	switch: "切换本会话模型（同 alt+p）；接受模糊 id、provider/id、@role、:level",
 	advisor: "切换顾问（第二个模型，每轮审查并注入备注）",
 	collab: "通过中继实时分享本会话",
 	join: "加入共享的协作会话",
@@ -2107,6 +2105,9 @@ export const COMMAND_ZH: Record<string, string> = {
 	trace: "在统计面板中打开本会话的 trace",
 	hub: "打开实时 Agent Hub",
 	restart: "以相同启动参数重启 omp 并恢复本会话",
+	skillful: "切换在系统提示词中列出可用技能（仅本会话）",
+	open: "在浏览器中打开会话中最后一条链接（或用 /copy 选择）",
+	wt: "将本会话移入新工作树，变更随行",
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2273,6 +2274,7 @@ export const STRING_ZH: Record<string, string> = {
 	"# Core Providers": "# 核心提供商",
 	"# Search & Tools": "# 搜索与工具",
 	"Add MCP Server": "添加 MCP 服务器",
+	"Add, list, or clear git worktrees (clone-first when enabled)": "添加、列出或清除 git 工作树（启用时优先克隆）",
 	"Available Tools (default-enabled unless noted):": "可用工具(除非另有说明,默认启用):",
 	"Benchmark models: TTFT/prefill vs decode throughput with p50/p95, across chat, prefill, generation, and prompt-cache workloads": "模型基准测试：TTFT/预填充与解码吞吐量对比（p50/p95），覆盖 chat、预填充、生成与提示词缓存负载",
 	"Check for and install updates": "检查并安装更新",
@@ -2294,7 +2296,6 @@ export const STRING_ZH: Record<string, string> = {
 	"Install or link an extension package (alias of `plugin install`/`plugin link`)": "安装或链接扩展包（`plugin install`/`plugin link` 的别名）",
 	"Interactive shell console": "交互式 shell 控制台",
 	"Join a shared collab session (same as /join)": "加入共享协作会话（同 /join）",
-	"List or clear agent-managed git worktrees (~/.omp/wt)": "列出或清除 Agent 管理的 git worktree（~/.omp/wt）",
 	"List, search, and refresh available models": "列出、搜索并刷新可用模型",
 	"Manage bundled task agents": "管理内置的 task Agent",
 	"Manage configuration settings": "管理配置设置",
@@ -2311,7 +2312,7 @@ export const STRING_ZH: Record<string, string> = {
 	"Run Oh My Pi as an ACP (Agent Client Protocol) server over stdio": "以 ACP（Agent Client Protocol）服务器模式通过 stdio 运行 Oh My Pi",
 	"Run onboarding setup or install dependencies for optional features": "运行引导设置，或安装可选功能的依赖",
 	"Run storage garbage collection": "运行存储垃圾回收",
-	"Run the local CDP relay that lets the browser tool drive your own Chrome tabs": "运行本地 CDP relay，让浏览器工具操控你自己的 Chrome 标签页",
+	"Run the local CDP relay that lets the browser prelude drive your own Chrome tabs": "运行本地 CDP relay，让浏览器 prelude 操控你自己的 Chrome 标签页",
 	"Share a saved session via an encrypted link (same as /share)": "通过加密链接分享已保存的会话（同 /share）",
 	"Show provider usage limits for every authenticated account": "显示每个已认证账户的提供商用量限制",
 	"Show what the read tool will return for a path, URL, or internal URI": "查看 read 工具对路径、URL 或内部 URI 将返回的内容",

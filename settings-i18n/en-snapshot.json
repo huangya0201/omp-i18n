@@ -1,5 +1,5 @@
 {
-	"version": "18.1.2",
+	"version": "18.1.10",
 	"settings": {
 		"autoResume": {
 			"label": "Auto Resume",
@@ -7,7 +7,7 @@
 		},
 		"power.sleepPrevention": {
 			"label": "Sleep Prevention",
-			"description": "Prevent macOS sleep during active sessions. Each level is cumulative — it adds the flags of all lower levels."
+			"description": "Prevent the system sleeping during active sessions. Each level is cumulative — it adds the flags of all lower levels."
 		},
 		"advisor.enabled": {
 			"label": "Enable Advisor",
@@ -177,6 +177,10 @@
 			"label": "Render Mermaid Diagrams",
 			"description": "Render Mermaid fenced code blocks as ASCII diagrams"
 		},
+		"tui.reactions": {
+			"label": "Agent Reactions",
+			"description": "Invite the agent to react to your message with an emoji badge on its bubble"
+		},
 		"tui.codexResetFireworks": {
 			"label": "Codex Reset Fireworks",
 			"description": "Celebrate unscheduled Codex weekly usage resets and newly banked saved resets with a top-third fireworks overlay that remains until Escape"
@@ -284,6 +288,10 @@
 		"includeWorkspaceTree": {
 			"label": "Include Workspace Tree",
 			"description": "Render the workspace directory tree in the system prompt. WARNING: This can bust prompt caching across sessions when files are modified."
+		},
+		"skillful": {
+			"label": "List Skills in Prompt",
+			"description": "List available skills in the system prompt; disable to save context and toggle per-session with /skillful"
 		},
 		"workspace.additionalDirectories": {
 			"label": "Additional Workspace Dirs",
@@ -395,7 +403,7 @@
 		},
 		"doubleEscapeAction": {
 			"label": "Double-Escape Action",
-			"description": "Pressing Escape twice with an empty editor opens the transcript rewind selector"
+			"description": "What pressing Escape twice with an empty editor does: open the transcript rewind selector, open the session tree, or nothing"
 		},
 		"treeFilterMode": {
 			"label": "Session Tree Filter",
@@ -905,13 +913,13 @@
 			"label": "JavaScript Eval Backend",
 			"description": "Allow the eval tool to dispatch JavaScript cells to the in-process runtime"
 		},
-		"eval.rb": {
-			"label": "Ruby Eval Backend",
-			"description": "Allow the eval tool to dispatch Ruby cells to the persistent Ruby kernel"
+		"eval.tools.enabled": {
+			"label": "Eval-Defined Tools",
+			"description": "Let eval cells define tools (@tool in Python, tool(fn) in JS) that task, agent(), and workpool() subagents can call"
 		},
-		"eval.jl": {
-			"label": "Julia Eval Backend",
-			"description": "Allow the eval tool to dispatch Julia cells to the persistent Julia kernel"
+		"eval.workpool.freshAgents": {
+			"label": "Fresh Workpool Agents",
+			"description": "Spawn a new subagent for every workpool item instead of reusing workers or batching queued items"
 		},
 		"eval.autoBackground.enabled": {
 			"label": "Eval Auto-Background",
@@ -924,14 +932,6 @@
 		"python.interpreter": {
 			"label": "Python Interpreter",
 			"description": "Optional path to an exact Python executable. When set, automatic Python runtime discovery is skipped."
-		},
-		"ruby.interpreter": {
-			"label": "Ruby Interpreter",
-			"description": "Optional path to an exact Ruby executable. When set, automatic Ruby runtime discovery is skipped."
-		},
-		"julia.interpreter": {
-			"label": "Julia Interpreter",
-			"description": "Optional path to an exact Julia executable. When set, automatic Julia runtime discovery is skipped."
 		},
 		"tools.approval": {
 			"label": "Tool Approval Policies",
@@ -997,13 +997,9 @@
 			"label": "Generate Image",
 			"description": "Enable the generate_image tool (text-to-image generation and editing). Exposed as an xd:// device when tools.xdev is on."
 		},
-		"inspect_image.mode": {
-			"label": "Inspect Image",
-			"description": "Controls the inspect_image tool, which delegates image understanding to a vision-capable model. 'auto' exposes it only when the active model lacks native image input; 'on' always exposes it; 'off' never does."
-		},
 		"computer.enabled": {
 			"label": "Computer",
-			"description": "Enable the scriptable host-desktop control tool (screenshots, input, accessibility)"
+			"description": "Enable the scriptable host-desktop eval prelude (screenshots, input, accessibility)"
 		},
 		"computer.display": {
 			"label": "Computer Display",
@@ -1017,9 +1013,9 @@
 			"label": "Computer Screenshot Height",
 			"description": "Maximum composite screenshot height in pixels"
 		},
-		"inspect_image.timeoutMs": {
-			"label": "Inspect Image Timeout",
-			"description": "Per-request timeout for the inspect_image vision-model call, in milliseconds. A stalled provider fails fast with a timeout error instead of blocking until manual abort. Set to 0 to disable the timeout."
+		"images.questionTimeoutMs": {
+			"label": "Image Question Timeout",
+			"description": "Per-request timeout for the vision-model call behind read's ?q= image questions, in milliseconds. A stalled provider fails fast with a timeout error instead of blocking until manual abort. Set to 0 to disable the timeout."
 		},
 		"checkpoint.enabled": {
 			"label": "Checkpoint/Rewind",
@@ -1063,7 +1059,7 @@
 		},
 		"browser.enabled": {
 			"label": "Browser",
-			"description": "Enable the browser tool for scripted Chromium automation (puppeteer)"
+			"description": "Enable the browser eval prelude for scripted Chromium automation (Puppeteer)"
 		},
 		"browser.cdpUrl": {
 			"label": "Browser CDP URL",
@@ -1071,7 +1067,7 @@
 		},
 		"browser.relay": {
 			"label": "Browser Relay",
-			"description": "Drive your own Chrome tabs through the omp browser relay. Install the extension once (`omp browser-relay install`); the relay server auto-starts when the browser tool needs it. Takes precedence over Browser CDP URL; set PI_BROWSER_RELAY=0 or PI_BROWSER_RELAY=1 to override."
+			"description": "Drive your own Chrome tabs through the omp browser relay. Install the extension once (`omp browser-relay install`); the relay server auto-starts when the browser prelude needs it. Takes precedence over Browser CDP URL; set PI_BROWSER_RELAY=0 or PI_BROWSER_RELAY=1 to override."
 		},
 		"browser.relayUrl": {
 			"label": "Browser Relay URL",
@@ -1165,9 +1161,21 @@
 			"label": "Refresh Title on Replan",
 			"description": "Refresh generated session titles after todo init replans unless the title was set by the user"
 		},
-		"task.isolation.mode": {
-			"label": "Isolation Mode",
-			"description": "Isolation backend for subagents. \"auto\" lets the native PAL pick the best available backend (CoW-aware filesystems, then overlayfs/ProjFS, then a git worktree / recursive-copy fallback)."
+		"task.isolation.enabled": {
+			"label": "Isolate Subagents",
+			"description": "Run subagents in an isolated copy of the checkout and integrate their changes afterwards"
+		},
+		"isolation.backend": {
+			"label": "Isolation Backend",
+			"description": "Backend used for subagent isolation and worktree cloning"
+		},
+		"worktree.clone": {
+			"label": "Clone Checkout into Worktrees",
+			"description": "New worktrees from `github pr_checkout` and `git worktree add` in bash start as a copy-on-write clone of the current checkout so ignored build artifacts (node_modules, target) carry over; falls back to a plain checkout when the filesystem cannot clone"
+		},
+		"worktree.cleanSource": {
+			"label": "Clean Source Checkout on /wt",
+			"description": "When creating a worktree with `/wt`, reset tracked changes and remove untracked files from the original checkout after carrying them over"
 		},
 		"task.isolation.apply": {
 			"label": "Apply Isolated Changes",
@@ -1335,11 +1343,11 @@
 		},
 		"providers.tinyModelDevice": {
 			"label": "Tiny Model Device",
-			"description": "ONNX execution provider for local tiny models (titles + memory). Default uses CPU-only inference. The PI_TINY_DEVICE env var overrides this."
+			"description": "Inference backend for local tiny models (titles + memory): an ONNX execution provider, or `mlx` to download MLX weights and run them through mlx-lm on Apple silicon. Default uses CPU-only ONNX. The PI_TINY_DEVICE env var overrides this."
 		},
 		"providers.tinyModelDtype": {
 			"label": "Tiny Model Precision",
-			"description": "ONNX quantization/precision for local tiny models. Default uses each model's shipped dtype (q4); lower precision is faster, higher is more faithful. The PI_TINY_DTYPE env var overrides this."
+			"description": "ONNX quantization/precision for local tiny models. Default uses each model's shipped dtype (q4); lower precision is faster, higher is more faithful. Ignored by the MLX backend (its repos are pre-quantized 4-bit). The PI_TINY_DTYPE env var overrides this."
 		},
 		"providers.memoryModel": {
 			"label": "Memory Model",
@@ -1442,15 +1450,15 @@
 			},
 			"idle": {
 				"label": "Prevent Idle Sleep",
-				"description": "Keep the system awake while a session is open (caffeinate -i)"
+				"description": "Keep the system awake while a session is open (macOS `caffeinate -i`)"
 			},
 			"display": {
 				"label": "Prevent Display Sleep",
-				"description": "Also keep the display from idle-sleeping (caffeinate -i -d)"
+				"description": "Also keep the display from idle-sleeping (macOS `caffeinate -i -d`)"
 			},
 			"system": {
 				"label": "Prevent System Sleep",
-				"description": "Also block all system sleep on AC and declare the user active (caffeinate -i -d -s -u)"
+				"description": "Also block all system sleep on AC and declare the user active (macOS `caffeinate -i -d -s -u`)"
 			}
 		},
 		"advisor.immuneTurns": {
@@ -3076,18 +3084,7 @@
 				"label": "10 lines"
 			}
 		},
-		"inspect_image.mode": {
-			"auto": {
-				"label": "Auto (only for models without vision)"
-			},
-			"on": {
-				"label": "On"
-			},
-			"off": {
-				"label": "Off"
-			}
-		},
-		"inspect_image.timeoutMs": {
+		"images.questionTimeoutMs": {
 			"0": {
 				"label": "Disabled"
 			},
@@ -3176,11 +3173,7 @@
 				"description": "List every device; fetch all docs on demand."
 			}
 		},
-		"task.isolation.mode": {
-			"none": {
-				"label": "None",
-				"description": "No isolation"
-			},
+		"isolation.backend": {
 			"auto": {
 				"label": "Auto",
 				"description": "Let the PAL pick the best available backend"
@@ -3782,25 +3775,17 @@
 				"label": "Online (TINY role, else @smol)",
 				"description": "Online title generation: the TINY model role (set one in /models) when assigned, otherwise the online fallback (commit role, then @smol). No local download or on-device inference."
 			},
-			"lfm2-350m": {
-				"label": "LFM2 350M",
-				"description": "Recommended local model; best speed/quality balance, about 212 MB cached."
+			"lfm2.5-230m": {
+				"label": "LFM2.5 230M",
+				"description": "Recommended local model; fastest LFM2.5 option, about 214 MB cached."
 			},
-			"qwen3-0.6b": {
-				"label": "Qwen3 0.6B",
-				"description": "Most robust local option; slower first load, about 500 MB cached."
+			"lfm2.5-350m": {
+				"label": "LFM2.5 350M",
+				"description": "Larger LFM2.5 option, about 292 MB cached; tends toward terse titles."
 			},
-			"gemma-270m": {
-				"label": "Gemma 270M",
-				"description": "Smallest viable local option; lower quality, lowest cache footprint."
-			},
-			"qwen2.5-0.5b": {
-				"label": "Qwen2.5 0.5B",
-				"description": "Balanced local fallback; moderate quality and cache footprint."
-			},
-			"lfm2-700m": {
-				"label": "LFM2 700M",
-				"description": "Highest-quality local option; larger and slower than LFM2 350M."
+			"falcon-h1-90m": {
+				"label": "Falcon H1 Tiny 90M",
+				"description": "Smallest option, about 147 MB cached; lower fidelity on complex prompts."
 			}
 		},
 		"providers.tinyModelDevice": {
@@ -3816,9 +3801,13 @@
 				"label": "CPU",
 				"description": "CPU-only inference"
 			},
+			"mlx": {
+				"label": "MLX",
+				"description": "Apple silicon GPU via mlx-lm (Python subprocess; macOS arm64)"
+			},
 			"metal": {
 				"label": "Metal",
-				"description": "WebGPU alias for Apple GPUs"
+				"description": "Alias for MLX"
 			},
 			"webgpu": {
 				"label": "WebGPU",
@@ -3926,7 +3915,7 @@
 			},
 			"qwen3-1.7b": {
 				"label": "Qwen3 1.7B",
-				"description": "Disabled for local inference: onnxruntime-node cannot run this ONNX export's RotaryEmbedding cache updates."
+				"description": "MLX only (providers.tinyModelDevice=mlx): onnxruntime-node cannot run this ONNX export's RotaryEmbedding cache updates."
 			},
 			"llama3.2:3b": {
 				"label": "Llama 3.2 3B",
@@ -3952,7 +3941,7 @@
 			},
 			"qwen3-1.7b": {
 				"label": "Qwen3 1.7B",
-				"description": "Disabled for local inference: onnxruntime-node cannot run this ONNX export's RotaryEmbedding cache updates."
+				"description": "MLX only (providers.tinyModelDevice=mlx): onnxruntime-node cannot run this ONNX export's RotaryEmbedding cache updates."
 			},
 			"llama3.2:3b": {
 				"label": "Llama 3.2 3B",
@@ -4002,7 +3991,7 @@
 			},
 			"qwen3-1.7b": {
 				"label": "Qwen3 1.7B",
-				"description": "Disabled for local inference: onnxruntime-node cannot run this ONNX export's RotaryEmbedding cache updates."
+				"description": "MLX only (providers.tinyModelDevice=mlx): onnxruntime-node cannot run this ONNX export's RotaryEmbedding cache updates."
 			},
 			"llama3.2:3b": {
 				"label": "Llama 3.2 3B",
@@ -4130,7 +4119,7 @@
 		"providers.fetch": {
 			"auto": {
 				"label": "Auto",
-				"description": "Priority: native > trafilatura > lynx > parallel > jina"
+				"description": "Priority: native > trafilatura > lynx > parallel > firecrawl > jina"
 			},
 			"native": {
 				"label": "Native",
@@ -4147,6 +4136,10 @@
 			"parallel": {
 				"label": "Parallel",
 				"description": "Requires PARALLEL_API_KEY"
+			},
+			"firecrawl": {
+				"label": "Firecrawl",
+				"description": "Requires FIRECRAWL_API_KEY"
 			},
 			"jina": {
 				"label": "Jina",
@@ -4194,11 +4187,11 @@
 		"loop": "Toggle loop mode. While enabled, the next prompt you send re-submits after every yield. Esc cancels the current iteration; /loop again to disable.",
 		"queue": "Queue a message for after the agent yields",
 		"model": "Switch model for this session",
-		"switch": "Switch model for this session (same as alt+p)",
+		"switch": "Switch model for this session (same as alt+p); accepts fuzzy ids, provider/id, @role, :level",
 		"fast": "Toggle priority service tier (OpenAI service_tier=priority, Anthropic speed=fast)",
+		"skillful": "Toggle listing available skills in the system prompt (session only)",
 		"extended-context": "Toggle premium long-context windows",
-		"computer": "Toggle the native computer-use tool for this session",
-		"vision": "Control the inspect_image vision-delegation tool for this session",
+		"computer": "Toggle the native computer-use eval prelude for this session",
 		"prewalk": "Switch to a fast/cheap model at the next action (works even without --prewalk)",
 		"advisor": "Toggle the advisor (a second model that reviews each turn and injects notes)",
 		"export": "Export session to HTML file",
@@ -4208,8 +4201,9 @@
 		"collab": "Share this session live via a relay",
 		"join": "Join a shared collab session",
 		"leave": "Leave the collab session",
-		"browser": "Toggle browser headless vs visible mode",
+		"browser": "Toggle browser eval-prelude headless vs visible mode",
 		"copy": "Pick text or code from the conversation to copy",
+		"open": "Open the last link from the conversation in your browser (or pick one with /copy)",
 		"todo": "View or modify the agent's todo list",
 		"session": "Session management commands",
 		"jobs": "Show async background jobs status",
@@ -4223,7 +4217,7 @@
 		"agents": "Open the agents hub (per-agent model, prewalk, and advisor)",
 		"git": "Open the git UI (split diff viewer, staging, commit composer)",
 		"hub": "Open the live Agent Hub",
-		"branch": "Create a new branch from a previous message",
+		"branch": "Rewind to a previous message, keeping the old path as a branch",
 		"fork": "Create a new fork from a previous message",
 		"tree": "Navigate session tree (switch branches)",
 		"login": "Login with OAuth provider",
@@ -4248,6 +4242,7 @@
 		"memory": "Inspect and operate memory maintenance",
 		"rename": "Rename the current session",
 		"move": "Move the current session to a different directory",
+		"wt": "Move this session into a new worktree, changes included",
 		"add-dir": "Add a workspace directory to this session (multi-root)",
 		"remove-dir": "Remove a workspace directory from this session",
 		"dirs": "List this session's workspace directories",
@@ -4291,6 +4286,11 @@
 			"off": "Disable fast mode",
 			"status": "Show fast mode status"
 		},
+		"skillful": {
+			"on": "List skills in the prompt for this session",
+			"off": "Omit the skills listing for this session",
+			"status": "Show skill listing status"
+		},
 		"extended-context": {
 			"on": "Enable premium long-context windows",
 			"off": "Use standard-pricing context windows",
@@ -4300,12 +4300,6 @@
 			"on": "Enable computer use for this session",
 			"off": "Disable computer use for this session",
 			"status": "Show computer use status"
-		},
-		"vision": {
-			"on": "Always expose inspect_image this session",
-			"off": "Never expose inspect_image this session",
-			"auto": "Follow inspect_image.mode (auto hides it for vision-capable models)",
-			"status": "Show inspect_image status"
 		},
 		"advisor": {
 			"on": "Enable the advisor",
